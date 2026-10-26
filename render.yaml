@@ -1,0 +1,30 @@
+# Render Blueprint Specification
+# Deploy with 1-click on https://render.com
+services:
+  - type: web
+    name: fomo-copy-bot
+    runtime: docker
+    dockerfilePath: docker/Dockerfile
+    plan: starter
+    region: oregon
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: BOT_MODE
+        value: paper # Keep 'paper' by default for safety. Change to 'live' only when ready.
+      - key: CONFIRM_LIVE_TRADING
+        value: "false" # Must be explicitly set to 'true' to enable live Solana execution
+      - key: PORT
+        value: 10000
+      - key: SOLANA_RPC_URL
+        value: https://api.mainnet-beta.solana.com # Use QuickNode/Helius for production performance
+      - key: STALKCHAIN_API_KEY
+        sync: false # Set in Render Dashboard -> Environment
+      - key: SOLANA_PRIVATE_KEY
+        sync: false # Secret: Dedicated Solana trading wallet private key (NEVER main wallet)
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false # Optional Telegram Bot Token for trade & risk alerts
+      - key: TELEGRAM_CHAT_ID
+        sync: false # Optional Telegram Chat ID
+      - key: KILL_SWITCH
+        value: "false"

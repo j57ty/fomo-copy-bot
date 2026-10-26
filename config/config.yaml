@@ -1,0 +1,75 @@
+# FOMO Copy-Trading Bot Configuration
+# Non-custodial crypto copy-trading bot for fomo.family traders
+
+bot:
+  # Mode: 'paper' (default simulated balance) or 'live' (real dedicated Solana wallet)
+  mode: "paper"
+  name: "FOMO Alpha Copy Bot"
+  poll_interval_seconds: 5
+
+stalkchain:
+  # StalkChain MCP server URL for on-chain & FOMO analytics
+  mcp_url: "https://data.stalkchain.com/mcp"
+  api_key: "" # Or set via STALKCHAIN_API_KEY environment variable
+  leaderboard_timeframe: "7d" # '24h', '7d', '30d', or 'all_time'
+  auto_sync_top_traders: false # Automatically follow top N traders if followed_traders is empty
+  top_traders_count: 3
+
+# Selected traders to copy (Solana wallet addresses or FOMO handles)
+# In paper mode, these sample profitable FOMO traders are used
+traders:
+  - "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM" # Top 7d FOMO Whale
+  - "HN7cABqLq46Es1jh92dQQisAq662SmxELLLsHHe4YWrH" # High Win-rate Memecoin Sniper
+  - "5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1" # Early Momentum Trader
+
+trading:
+  # Size mode: 'fixed' (fixed USD per copy) or 'percent' (% of current portfolio)
+  size_mode: "fixed"
+  trade_size_usd: 50.0 # $50 per trade
+  portfolio_pct_per_trade: 5.0 # 5% per trade if size_mode is 'percent'
+  max_open_positions: 5 # Maximum simultaneous open positions
+  max_chase_pct: 5.0 # Skip trade if price has already pumped >5% since trader entered
+  copy_first_buy_only: true # Only copy the trader's first buy in a token (prevents compounding)
+  token_cooldown_seconds: 600 # 10 min cooldown before re-buying the same token
+  mirror_sells: false # Independent exits! False means bot uses your own TP/SL rules only
+
+filters:
+  # Safety and quality filters for tokens
+  min_liquidity_usd: 25000.0 # Skip tokens with less than $25k pool liquidity
+  min_market_cap_usd: 50000.0 # Skip tokens below $50k mcap (ultra low-cap rugs)
+  max_market_cap_usd: 25000000.0 # Cap max entry mcap to preserve upside
+
+exits:
+  # Independent multi-level take-profit and stop-loss
+  take_profit_levels:
+    - trigger_pct: 100.0 # At +100% (2x) -> sell 50% of the position
+      sell_pct: 50.0
+    - trigger_pct: 300.0 # At +300% (4x) -> sell 25% of current bag
+      sell_pct: 25.0
+    - trigger_pct: 500.0 # At +500% (6x) -> sell remaining 100%
+      sell_pct: 100.0
+  stop_loss_pct: -35.0 # Hard stop-loss at -35% (sells 100% of remaining position)
+
+safety:
+  # Hard risk circuit breakers (bot CANNOT override these)
+  max_daily_loss_usd: 150.0 # Halts copying if realized losses in last 24h exceed $150
+  max_portfolio_drawdown_pct: 20.0 # Halts copying if total portfolio drops 20% from its all-time peak
+  kill_switch: false # Emergency kill switch (set true or use CLI/API/Telegram)
+
+wallet:
+  network: "solana"
+  starting_paper_balance_usd: 1000.0 # Starting fake USD balance in paper trading mode
+  solana_rpc_url: "https://api.mainnet-beta.solana.com" # Dedicated RPC recommended (e.g. Helius/QuickNode)
+  slippage_bps: 150 # 1.5% max slippage tolerance
+
+notifications:
+  telegram_enabled: false # Set true and provide token/chat_id to receive alerts
+  telegram_bot_token: "" # Or set via TELEGRAM_BOT_TOKEN env var
+  telegram_chat_id: "" # Or set via TELEGRAM_CHAT_ID env var
+  notify_on_entry: true
+  notify_on_exit: true
+  notify_on_risk_alert: true
+
+web:
+  host: "0.0.0.0"
+  port: 8080 # Render auto-sets PORT env var
